@@ -1,0 +1,14 @@
+.navi-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: var(--navi-height);
+}
+
+.contents-wrapper {
+  display: flex;
+  width: 100%;
+  min-height: var(--contents-height);
+}
