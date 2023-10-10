@@ -10,11 +10,15 @@ html {
   --teal: rgb(0, 132, 132);
   --gpt-blue: rgb(0, 208, 208);
   --chat-bg: rgb(191, 255, 255);
-
-  -ms-overflow-style: none; /* 인터넷 익스플로러 */
-  scrollbar-width: none; /* 파이어폭스 */
+  --search-textarea-height: 6rem;
+  --search-textarea-margin-y: 3px;
 }
-::-webkit-scrollbar {
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 

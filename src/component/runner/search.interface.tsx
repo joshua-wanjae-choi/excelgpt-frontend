@@ -1,0 +1,3 @@
+interface ISearchProps {
+  gptWrapHeight: number;
+}

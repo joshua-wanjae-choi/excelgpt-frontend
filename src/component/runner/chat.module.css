@@ -1,8 +1,9 @@
 .chat-wrapper {
   display: flex;
   flex-direction: column;
-  justify-content: end;
-  min-height: 84%;
+  height: calc(var(--contents-height) - var(--search-textarea-height) - 2 * var(--search-textarea-margin-y));
+  overflow-y: auto;
+  overflow-x: hidden;
   background-color: var(--chat-bg);
 }
 
@@ -10,6 +11,7 @@
   display: flex;
   justify-content: start;
   padding: 1rem;
+  white-space: pre-wrap;
 }
 
 .chat-icon {
@@ -38,6 +40,10 @@
   padding: 0.4rem;
   justify-content: center;
   align-items: center;
+  max-width: 100%;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word; 
 }
 
 .answer-wrapper {

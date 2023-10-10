@@ -4,11 +4,12 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  min-height: var(--navi-height);
+  height: var(--navi-height);
 }
 
 .contents-wrapper {
   display: flex;
   width: 100%;
-  min-height: var(--contents-height);
+  height: var(--contents-height);
+  overflow: hidden;
 }
