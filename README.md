@@ -1,5 +1,5 @@
-# excelgpt-front
-excelgpt-front
+# excelgpt-frontend
+excelgpt-frontend
 
 # 명령어 모음
 - ```bash
