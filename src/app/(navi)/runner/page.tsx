@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Chat } from "@/component/runner/chat";
-import { Search } from "@/component/runner/search";
+import { Chat } from "@/component/runner/gpt/chat";
+import { Search } from "@/component/runner/gpt/search";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 import { getGptSession } from "@/query/gpt";
 import styles from "./runner.module.css";
@@ -34,11 +34,12 @@ export default function Page() {
 
   return (
     <div className="d-flex flex-row">
-      <div className={styles["excel-wrapper"]}>hello world</div>
+      <div className={styles["excel-wrapper"]}>
+        <textarea name="" id=""></textarea>
+      </div>
       <div className={styles["gpt-wrapper"]} ref={gptWrapRef}>
         <Chat gptWrapHeight={gptWrapHeight} />
         <Search gptWrapHeight={gptWrapHeight} />
-        <iframe src="https://chat.openai.com/api/auth/session" />
       </div>
     </div>
   );
