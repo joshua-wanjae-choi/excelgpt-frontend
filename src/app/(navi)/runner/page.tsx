@@ -5,6 +5,7 @@ import { Search } from "@/component/runner/search";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 import { getGptSession } from "@/query/gpt";
 import styles from "./runner.module.css";
+import ExcelTable from "@/component/runner/excel/excel-table";
 
 export default function Page() {
   const gptWrapRef = useRef<HTMLDivElement>(null);
@@ -32,9 +33,12 @@ export default function Page() {
   //   console.log('data', data);
   // }, [data]);
 
+
   return (
     <div className="d-flex flex-row">
-      <div className={styles["excel-wrapper"]}>hello world</div>
+      <div className={styles["excel-wrapper"]}>hello world
+        <ExcelTable />
+      </div>
       <div className={styles["gpt-wrapper"]} ref={gptWrapRef}>
         <Chat gptWrapHeight={gptWrapHeight} />
         <Search gptWrapHeight={gptWrapHeight} />
