@@ -157,6 +157,9 @@ export const Search = (props: ISearchProps) => {
         searchWrapref.current,
         "calc(var(--search-textarea-height) + 2 * var(--search-textarea-margin-y));"
       );
+
+      // 상위 handleSubmit 처리
+      props.upperHandleSubmit();
     }
   };
 

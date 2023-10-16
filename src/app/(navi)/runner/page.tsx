@@ -2,19 +2,20 @@
 import { useState, useEffect, useRef } from "react";
 import { Chat } from "@/component/runner/gpt/chat";
 import { Search } from "@/component/runner/gpt/search";
-import { QueryClient, useQuery } from "@tanstack/react-query";
-import { getGptSession } from "@/query/gpt";
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { uploadFile } from "@/query/excelgpt/upload-file";
 import styles from "./runner.module.css";
 import ExcelTable from "@/component/runner/excel/excel-table";
 
 export default function Page() {
+  const sheetRef = useRef<HTMLTextAreaElement>(null);
   const gptWrapRef = useRef<HTMLDivElement>(null);
   const [windowHeight, setWindowHeight] = useState(0);
   const [gptWrapHeight, setGptWrapHeight] = useState(0);
-  const queryClient = new QueryClient();
+  // const queryClient = new QueryClient();
   // const { isLoading, isError, data, error } = useQuery({
-  //   queryKey: ["getGptSession"],
-  //   queryFn: getGptSession,
+  //   queryKey: ["uploadFile"],
+  //   queryFn: uploadFile,
   // });
 
   useEffect(() => {
@@ -29,9 +30,14 @@ export default function Page() {
     }
   }, [windowHeight]);
 
-  // useEffect(() => {
-  //   console.log('data', data);
-  // }, [data]);
+  const mutation = useMutation((data: string) => uploadFile(data));
+  const handleSubmit = () => {
+    // data 추출
+    if (sheetRef.current) {
+      console.log("ome in here?");
+      mutation.mutate(sheetRef.current.value);
+    }
+  };
 
 
   return (
@@ -41,7 +47,10 @@ export default function Page() {
       </div>
       <div className={styles["gpt-wrapper"]} ref={gptWrapRef}>
         <Chat gptWrapHeight={gptWrapHeight} />
-        <Search gptWrapHeight={gptWrapHeight} />
+        <Search
+          gptWrapHeight={gptWrapHeight}
+          upperHandleSubmit={handleSubmit}
+        />
       </div>
     </div>
   );
