@@ -1,4 +1,4 @@
-import { useReactTable, createColumnHelper, getCoreRowModel, flexRender } from '@tanstack/react-table'
+import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, ColumnDef } from '@tanstack/react-table'
 import { useState, useEffect } from 'react'
 
 export default function ExcelTable() {
@@ -31,9 +31,8 @@ export default function ExcelTable() {
   const getColKeys = (numCols: number) => {
     const result: string[] = [];
     const alphabets = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
-    console.log('alphabets.length', alphabets.length);
 
-    for (let i = 1; i < 5; i++) {
+    for (let i = 1; i < Infinity; i++) {
       const powed = Math.pow(alphabets.length, i);
       productLetters(
         {
@@ -44,17 +43,16 @@ export default function ExcelTable() {
         });
 
       if (numCols < powed) {
-        console.log('powed', powed);
-        console.log('i', i);
+        // console.log('powed', powed);
+        // console.log('i', i);
         break;
       }
     }
-
-
-    console.log('result', result);
+    // console.log('result', result);
+    return result;
   }
-  getColKeys(200);
 
+  const colKeys = getColKeys(100);
 
   const defaultData: IExcelTable[] = [
     {
@@ -69,26 +67,38 @@ export default function ExcelTable() {
     },
   ];
 
+  // Give our default column cell renderer editing superpowers!
+  const defaultColumn: Partial<ColumnDef<IExcelTable>> = {
+    cell: ({ getValue, row: { index }, column: { id }, table }) => {
+      const initialValue = getValue()
+      // We need to keep and update the state of the cell normally
+      const [value, setValue] = useState(initialValue)
+
+      // If the initialValue is changed external, sync it up with our state
+      useEffect(() => {
+        setValue(initialValue)
+      }, [initialValue])
+
+      return (
+        <input
+          value={value as string}
+          onChange={e => setValue(e.target.value)}
+        />
+      )
+    },
+  }
   const columnHelper = createColumnHelper<IExcelTable>();
-  const columns = [
-    columnHelper.accessor('A', {
-      cell: info => info.getValue(),
+  const columns = colKeys.map(colKey => (
+    columnHelper.accessor(colKey, {
       footer: info => info.column.id,
-    }),
-    columnHelper.accessor('B', {
-      cell: info => info.getValue(),
-      footer: info => info.column.id,
-    }),
-    columnHelper.accessor('C', {
-      cell: info => info.getValue(),
-      footer: info => info.column.id,
-    }),
-  ]
+    })
+  ))
 
   const [data, setData] = useState(() => [...defaultData])
   const table = useReactTable({
     data,
     columns,
+    defaultColumn,
     getCoreRowModel: getCoreRowModel(),
   })
 
