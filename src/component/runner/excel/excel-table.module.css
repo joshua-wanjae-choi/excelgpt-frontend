@@ -1,5 +1,5 @@
 .excel-table-wrapper {
   display: flex;
+  flex-direction: column;
   height: var(--contents-height);
-  overflow: auto;
 }
