@@ -19,6 +19,7 @@ export const ExcelTable = (props: IExcelTable) => {
     minDimensions: [20, 40],
     rowResize: true,
     tableOverflow: true,
+    tableHeight: "100%",
   };
 
   useEffect(() => {
