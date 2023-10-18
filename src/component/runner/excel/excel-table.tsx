@@ -1,144 +1,99 @@
-import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, ColumnDef } from '@tanstack/react-table'
-import { useState, useEffect } from 'react'
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import styles from './excel-table.module.css';
+import jspreadsheet from 'jspreadsheet-ce';
+import type IJspreadsheet from 'jspreadsheet-ce';
+import 'jspreadsheet-ce/dist/jspreadsheet.css';
 
-export default function ExcelTable() {
+interface IJspreadsheetWrapper extends HTMLDivElement {
+  jspreadsheet: IJspreadsheet.JSpreadsheet;
+}
 
-  const productLetters = (args: IProductLetters) => {
-    const defaultArgs = {
-      prefix: '',
-    }
-    args = { ...defaultArgs, ...args }
+export const ExcelTable = (props: IExcelTable) => {
+  const [downedKey, setDownedKey] = useState('none');
 
-    if (args.numLoop < 1) {
-      args.result.push(`${args.prefix}`);
-      return;
-    }
-    for (let l of args.target) {
-      productLetters({
-        target: args.target,
-        result: args.result,
-        numLoop: args.numLoop - 1,
-        prefix: `${args.prefix}${l}`,
-        lenResult: args.lenResult,
-      })
-
-      if (args.lenResult && args.result.length >= args.lenResult) {
+  const selectionActive = function (
+    instance: HTMLElement,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    origin: any
+  ) {
+    // 선택한 셀로 스크롤 이동
+    if (jRef.current) {
+      const elem = jRef.current.querySelector(
+        `td[data-x="${x2}"][data-y="${y2}"]`
+      );
+      if (!elem) {
         return;
       }
+      elem.scrollIntoView();
+    }
+  };
+
+  // 임시
+  const handleScroll = () => {
+    console.log('handleScroll', downedKey);
+    const allowedKeys = [
+      'Tab',
+      'Enter',
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+    ];
+    if (!jRef.current || !allowedKeys.includes(downedKey)) {
+      return;
+    }
+
+    const rowNum = jRef.current.jspreadsheet.getSelectedRows(true)[0];
+    const colNum = jRef.current.jspreadsheet.getSelectedColumns()[0];
+    if (!rowNum || !colNum) {
+      return;
+    }
+
+    const elem = jRef.current.querySelector(
+      `td[data-x="${rowNum}"][data-y="${colNum}"]`
+    );
+    if (!elem) {
+      return;
+    }
+
+    const elemRect = elem.getBoundingClientRect();
+    if (!elemRect) {
+      return;
+    }
+    // 화면에서 2번째 행 미만 윗 키보드를 눌렀으면
+    if (downedKey === 'ArrowUp' && colNum > 2 && elemRect.y < 2 * elemRect.height) {
+      jRef.current.scrollBy(0, -2 * elemRect.height);
+    } else {
+      elem.scrollIntoView();
     }
   }
 
-  const getColKeys = (numCols: number) => {
-    const result: string[] = [];
-    const alphabets = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+  // 임시
+  const upScroll = (e: KeyboardEvent) => {
+    setDownedKey(e.key);
+  };
 
-    for (let i = 1; i < Infinity; i++) {
-      const powed = Math.pow(alphabets.length, i);
-      productLetters(
-        {
-          target: alphabets,
-          result: result,
-          numLoop: i,
-          lenResult: numCols,
-        });
-
-      if (numCols < powed) {
-        // console.log('powed', powed);
-        // console.log('i', i);
-        break;
-      }
-    }
-    // console.log('result', result);
-    return result;
-  }
-
-  const colKeys = getColKeys(100);
-
-  const defaultData: IExcelTable[] = [
-    {
-      "A": "1",
-      "B": "2",
-      "C": "4",
-    },
-    {
-      "A": "3",
-      "B": "6",
-      "C": "9",
-    },
-  ];
-
-  // Give our default column cell renderer editing superpowers!
-  const defaultColumn: Partial<ColumnDef<IExcelTable>> = {
-    cell: ({ getValue, row: { index }, column: { id }, table }) => {
-      const initialValue = getValue()
-      // We need to keep and update the state of the cell normally
-      const [value, setValue] = useState(initialValue)
-
-      // If the initialValue is changed external, sync it up with our state
-      useEffect(() => {
-        setValue(initialValue)
-      }, [initialValue])
-
-      return (
-        <input
-          value={value as string}
-          onChange={e => setValue(e.target.value)}
-        />
-      )
-    },
-  }
-  const columnHelper = createColumnHelper<IExcelTable>();
-  const columns = colKeys.map(colKey => (
-    columnHelper.accessor(colKey, {
-      footer: info => info.column.id,
-    })
-  ))
-
-  const [data, setData] = useState(() => [...defaultData])
-  const table = useReactTable({
-    data,
-    columns,
-    defaultColumn,
-    getCoreRowModel: getCoreRowModel(),
-  })
+  const jRef = useRef<IJspreadsheetWrapper>(null);
+  const options: IJspreadsheet.JSpreadsheetOptions = {
+    data: [
+      [1, 2, 4],
+      [3, 6, 9],
+    ],
+    minDimensions: [10, 10],
+    rowResize: true,
+    onselection: selectionActive,
+  };
 
   useEffect(() => {
-    console.log('table.getHeaderGroups()', table.getHeaderGroups());
-    console.log('table.getRowModel().rows', table.getRowModel().rows);
-  }, [])
+    if (jRef.current && !jRef.current.jspreadsheet) {
+      jspreadsheet(jRef.current, options);
+      jRef.current.onkeyup = upScroll;
+    }
+  }, [options]);
 
-  return (
-    <div className="p-2">
-      <table>
-        <thead>
-          {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map(header => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map(row => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map(cell => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-
-}
+  return <div className={`${styles['excel-table-wrapper']}`} ref={jRef} />;
+};
