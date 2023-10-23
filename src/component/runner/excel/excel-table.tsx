@@ -1,9 +1,17 @@
 "use client";
-import { useState, useEffect, useRef, use, KeyboardEvent } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  use,
+  KeyboardEvent,
+  createElement,
+} from "react";
 import styles from "./excel-table.module.css";
 import jspreadsheet from "jspreadsheet-ce";
 import type IJspreadsheet from "jspreadsheet-ce";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
+import { createPortal } from "react-dom";
 
 interface IJspreadsheetWrapper extends HTMLDivElement {
   // single sheet
@@ -35,7 +43,8 @@ export const ExcelTable = (props: IExcelTable) => {
     },
     {
       ...defaultOption,
-      sheetName: "sheet2",
+      sheetName:
+        "sheet2",
       data: [
         [4, 5, 6],
         [7, 8, 9],
@@ -43,11 +52,44 @@ export const ExcelTable = (props: IExcelTable) => {
     },
   ];
 
+  const createNewSheet = () => {
+    const newSheetOption = {
+      ...defaultOption,
+      sheetName: "sheet3",
+      data: [
+        [1, 1, 1],
+        [1, 1, 1],
+      ],
+    };
+
+    if (jRef.current) {
+      jspreadsheet.tabs(jRef.current, [newSheetOption]);
+    }
+  };
+
   useEffect(() => {
     if (jRef.current && !jRef.current.jexcel) {
       jspreadsheet.tabs(jRef.current, sheetOptions);
+
+      const sheetsElem = jRef.current.querySelector(
+        `div.${styles["excel-table-wrapper"]} > div:first-child`
+      ) as HTMLElement;
+
+      sheetsElem.classList.add(styles["sheet-navi-wrapper"]);
     }
   }, [sheetOptions]);
 
-  return <div className={`${styles["excel-table-wrapper"]}`} ref={jRef} />;
+  return (
+    <>
+      <div className={`${styles["sheet-info-wrapper"]}`}>
+        <button
+          className={`${styles["new-sheet-button"]} jexcel_tab_link`}
+          onClick={createNewSheet}
+        >
+          +
+        </button>
+      </div>
+      <div className={`${styles["excel-table-wrapper"]}`} ref={jRef} />; ;
+    </>
+  );
 };
