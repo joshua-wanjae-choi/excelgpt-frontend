@@ -35,6 +35,12 @@
   padding-right: 20px;
   margin-right: 5px;
   margin-bottom: 5px;
-  background-color: yellowgreen;
+  background-color: yellow;
   cursor: pointer;
+}
+
+.sheet-remove-button {
+  display: flex;
+  padding: 0 2px;
+  margin-left: 2px;
 }
