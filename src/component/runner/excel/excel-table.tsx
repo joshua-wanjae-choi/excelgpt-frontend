@@ -1,12 +1,5 @@
 "use client";
-import {
-  useState,
-  useEffect,
-  useRef,
-  use,
-  KeyboardEvent,
-  createElement,
-} from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./excel-table.module.css";
 import jspreadsheet from "jspreadsheet-ce";
 import type IJspreadsheet from "jspreadsheet-ce";
@@ -36,15 +29,23 @@ export const ExcelTable = (props: IExcelTable) => {
     {
       ...defaultOption,
       sheetName: "sheet1",
-      data: [[]],
-    },
-    {
-      ...defaultOption,
-      sheetName: "sheet2",
-      data: [[]],
+      data: [
+        [1, 2, 3],
+        [5, 6, 7],
+      ],
     },
   ];
-  let newSheetIndex = sheetOptions.length + 1;
+  const initalLastCellIndex: ILastCellIndex = {
+    x: 0,
+    y: 0,
+  };
+  const [lastCellIndexes, setLastCellIndexes] = useState<ILastCellIndex[]>(
+    Array(sheetOptions.length).fill(initalLastCellIndex)
+  );
+  const [newSheetIndex, setNewSheetIndex] = useState<number>(
+    sheetOptions.length + 1
+  );
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (jRef.current && !jRef.current.jexcel) {
@@ -57,10 +58,51 @@ export const ExcelTable = (props: IExcelTable) => {
       ) as HTMLElement;
       sheetNaviElem.classList.add(styles["sheet-navi-wrapper"]);
 
-      // 삭제 버튼 element를 sheet link에 추가
-      appendRemoveSheetButtons();
+      setIsLoaded(true);
     }
   }, []);
+
+  /**
+   * lastCellIndex 추가
+   * @param lastCellIndex: 신규 시트 lastCellIndex
+   */
+  const appendLastCellIndex = (lastCellIndex: ILastCellIndex) => {
+    setLastCellIndexes([...lastCellIndexes, lastCellIndex]);
+  };
+
+  /**
+   * lastCellIndex 삭제
+   * @param index 시트 인덱스
+   * @returns bool 성공여부
+   */
+  const removeLastCellIndex = (index: number) => {
+    if (lastCellIndexes[index] === undefined) {
+      return false;
+    }
+
+    setLastCellIndexes(lastCellIndexes.filter((x, i) => i !== index));
+    return true;
+  };
+
+  /**
+   * lastCellIndex 갱신
+   * @param index 시트 인덱스
+   * @param lastCellIndex 업데이트 값
+   * @returns bool 성공여부
+   */
+  const updateLastCellIndex = (
+    index: number,
+    lastCellIndex: ILastCellIndex
+  ) => {
+    if (lastCellIndexes[index] === undefined) {
+      return false;
+    }
+
+    setLastCellIndexes(
+      lastCellIndexes.map((x, i) => (i === index ? lastCellIndex : x))
+    );
+    return true;
+  };
 
   /**
    * 새 시트 추가
@@ -75,11 +117,11 @@ export const ExcelTable = (props: IExcelTable) => {
       jspreadsheet.tabs(jRef.current, [newSheetOption]);
     }
 
-    // 삭제 버튼 element를 sheet link에 추가
-    appendRemoveSheetButtons();
-
     // newSheetIndex 갱신
-    newSheetIndex += 1;
+    setNewSheetIndex(newSheetIndex + 1);
+
+    // lastCellIndex 추가
+    appendLastCellIndex(initalLastCellIndex);
   };
 
   /**
@@ -87,36 +129,34 @@ export const ExcelTable = (props: IExcelTable) => {
    */
   const appendRemoveSheetButtons = () => {
     if (jRef.current) {
+      const result = [];
       const tabElems = jRef.current.querySelectorAll(
         `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet]`
       );
 
       for (const tabElem of tabElems) {
-        const childElem = tabElem.querySelector(
-          `.${styles["sheet-remove-button"]}`
-        );
-        if (childElem) {
-          continue;
-        }
-
         // 삭제 버튼 생성
-        const removeSheetButton = document.createElement(
-          "button"
-        ) as HTMLElement;
-        removeSheetButton.innerText = "X";
-        removeSheetButton.classList.add(`${styles["sheet-remove-button"]}`);
-        removeSheetButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const parentElem = (e.target as HTMLElement)
-            .parentElement as HTMLElement;
-          const index = parentElem.getAttribute("data-spreadsheet");
-          if (index) {
-            removeSheet(parseInt(index, 10));
-          }
-        });
+        const nodeElem = createPortal(
+          <button
+            onClick={(e) => {
+              const parentElem = (e.target as HTMLElement)
+                .parentElement as HTMLElement;
+              const index = parentElem.getAttribute("data-spreadsheet");
+              if (index) {
+                removeSheet(parseInt(index, 10));
+              }
+            }}
+            className={`${styles["sheet-remove-button"]}`}
+          >
+            X
+          </button>,
+          tabElem
+        );
 
-        tabElem.appendChild(removeSheetButton);
+        result.push(nodeElem);
       }
+
+      return result;
     }
   };
 
@@ -159,18 +199,40 @@ export const ExcelTable = (props: IExcelTable) => {
         tabElem.setAttribute("data-spreadsheet", `${i}`);
       }
 
-      // 마지막 시트 삭제 시 신규 sheet 생성
+      // 마지막 남은 시트 삭제 시 신규 sheet 생성
       if (jRef.current.jexcel.length === 0) {
         createNewSheet();
       }
 
       // 첫번째 시트 선택
       (tabElems[0] as HTMLElement).click();
+
+      // lastCellIndex 삭제
+      removeLastCellIndex(index);
     }
   };
 
   return (
     <>
+      <button
+        onClick={() => {
+          console.log("lastCellIndexes", lastCellIndexes);
+        }}
+      >
+        show me lastCellIndexes
+      </button>
+      <button
+        onClick={() => {
+          if (jRef.current) {
+            for (const sheet of jRef.current.jexcel) {
+              const a = sheet.getJson();
+              console.log("a", a);
+            }
+          }
+        }}
+      >
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      </button>
       <div className={`${styles["sheet-info-wrapper"]}`}>
         <button
           className={`${styles["new-sheet-button"]}`}
@@ -180,6 +242,7 @@ export const ExcelTable = (props: IExcelTable) => {
         </button>
       </div>
       <div className={`${styles["excel-table-wrapper"]}`} ref={jRef} />; ;
+      {isLoaded && appendRemoveSheetButtons()}
     </>
   );
 };
