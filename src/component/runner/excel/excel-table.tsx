@@ -22,8 +22,9 @@ export const ExcelTable = (props: IExcelTable) => {
     minDimensions: [20, 40],
     rowResize: true,
     tableOverflow: true,
-    tableHeight: "1000px",
+    tableHeight: "200px",
     tableWidth: "100%",
+    oneditionend: (...rest) => handleEditCell(...rest),
   };
   const sheetOptions: IJspreadsheet.TabOptions[] = [
     {
@@ -46,6 +47,7 @@ export const ExcelTable = (props: IExcelTable) => {
     sheetOptions.length + 1
   );
   const [isLoaded, setIsLoaded] = useState(false);
+  const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
 
   useEffect(() => {
     if (jRef.current && !jRef.current.jexcel) {
@@ -53,14 +55,72 @@ export const ExcelTable = (props: IExcelTable) => {
       jspreadsheet.tabs(jRef.current, sheetOptions);
 
       // sheet navi 클래스 추가
-      const sheetNaviElem = jRef.current.querySelector(
+      const sheetNaviWrapElem = jRef.current.querySelector(
         `div.${styles["excel-table-wrapper"]} > div:first-child`
       ) as HTMLElement;
-      sheetNaviElem.classList.add(styles["sheet-navi-wrapper"]);
+      sheetNaviWrapElem.classList.add(styles["sheet-navi-wrapper"]);
+
+      // 현재 시트 인덱스 기록
+      const sheetNaviElem = sheetNaviWrapElem.querySelector(
+        `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet]`
+      );
+      sheetNaviElem?.addEventListener("click", handleSheetNaviClick);
 
       setIsLoaded(true);
     }
   }, []);
+
+  useEffect(() => {
+    // 다른 시트를 선택하거나, lastCellIndexes가 변경된 경우
+    if (jRef.current) {
+      for (const elem of jRef.current.jexcel) {
+        elem.options.oneditionend = handleEditCell;
+      }
+    }
+  }, [currentSheetIndex, lastCellIndexes]);
+
+  /**
+   * 셀 값이 변경된 경우
+   * @param instance: jspreadsheet HTML
+   * @param cell: cell HTML
+   * @param x: x 좌표
+   * @param y: y 좌효
+   * @param rest: 나머지 인자
+   */
+  const handleEditCell = (
+    instance: any,
+    cell: any,
+    x: number,
+    y: number,
+    ...rest: any[]
+  ) => {
+    if (jRef.current) {
+      const tabElem = jRef.current.querySelector(
+        `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet].selected`
+      );
+
+      if (tabElem) {
+        const old = lastCellIndexes[currentSheetIndex];
+        updateLastCellIndex(currentSheetIndex, {
+          x: x > old.x ? x : old.x,
+          y: y > old.y ? y : old.y,
+        });
+      }
+    }
+  };
+
+  /**
+   * 시트 네비 클릭 시 currentSheetIndex 갱신
+   */
+  const handleSheetNaviClick = (e: Event) => {
+    if (e.target) {
+      const elem = e.target as HTMLDivElement;
+      const sheetIndex = elem.getAttribute("data-spreadsheet");
+      if (sheetIndex) {
+        setCurrentSheetIndex(parseInt(sheetIndex, 10));
+      }
+    }
+  };
 
   /**
    * lastCellIndex 추가
@@ -114,8 +174,18 @@ export const ExcelTable = (props: IExcelTable) => {
     };
 
     if (jRef.current) {
+      // 신규 시트 생성
       jspreadsheet.tabs(jRef.current, [newSheetOption]);
+
+      // 신규 시트 인덱스 기록
+      const sheetNaviElem = jRef.current.querySelector(
+        `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet].selected`
+      );
+      sheetNaviElem?.addEventListener("click", handleSheetNaviClick);
     }
+
+    // currentSheetIndex 갱신
+    setCurrentSheetIndex(currentSheetIndex + 1);
 
     // newSheetIndex 갱신
     setNewSheetIndex(newSheetIndex + 1);
