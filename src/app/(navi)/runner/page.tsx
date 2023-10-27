@@ -44,7 +44,6 @@ export default function Page() {
     console.log("!@#!@# gptWrapHeight", gptWrapHeight);
   }, [gptWrapHeight]);
 
-  const mutation = useMutation((data: string) => uploadFile(data));
   const handleSubmit = () => {
     // data 추출
     console.log("run handleSubmit");

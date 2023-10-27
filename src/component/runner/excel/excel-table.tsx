@@ -6,6 +6,8 @@ import type IJspreadsheet from "jspreadsheet-ce";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
 import { createPortal } from "react-dom";
 import { getAlphabetsColNames } from "@/util/product-letters/product-letters";
+import { useMutation } from "@tanstack/react-query";
+import { uploadFile } from "@/query/excelgpt/upload-file";
 
 interface IJspreadsheetWrapper extends HTMLDivElement {
   // single sheet
@@ -77,8 +79,14 @@ export const ExcelTable = (props: IExcelTable) => {
     sheetOptions.length + 1
   );
   const [isLoaded, setIsLoaded] = useState(false);
-  const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
+  const [currentSheetIndex, setCurrentSheetIndex] = useState(
+    sheetOptions.length > 0 ? sheetOptions.length -1 : 0
+  );
+  // 데이터 추출 시 사용하는 구분자
   const dataSep = "|";
+  const mutation = useMutation({
+    mutationFn: uploadFile,
+  });
 
   useEffect(() => {
     if (jRef.current && !jRef.current.jexcel) {
@@ -310,6 +318,7 @@ export const ExcelTable = (props: IExcelTable) => {
 
   const extractData = () => {
     const result: ISheetData = {};
+
     if (jRef.current) {
       for (const [i, sheet] of jRef.current.jexcel.entries()) {
         const sheetNaviElem = jRef.current.querySelector(
@@ -335,9 +344,9 @@ export const ExcelTable = (props: IExcelTable) => {
 
         result[sheetName] = text;
       }
-
-      return result;
     }
+
+    return result;
   };
 
   return (
@@ -349,10 +358,14 @@ export const ExcelTable = (props: IExcelTable) => {
       >
         show me lastCellIndexes
       </button>
-      <button onClick={() => {
-        const extracted = extractData();
-        console.log('extracted', extracted);
-      }}>!!!!!!!!!!!!!!!!!!!!!!!!!!!!</button>
+      <button
+        onClick={() => {
+          const extracted = extractData();
+          mutation.mutate(extracted);
+        }}
+      >
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      </button>
       <div className={`${styles["sheet-info-wrapper"]}`}>
         <button
           className={`${styles["new-sheet-button"]}`}
