@@ -5,6 +5,7 @@ import jspreadsheet from "jspreadsheet-ce";
 import type IJspreadsheet from "jspreadsheet-ce";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
 import { createPortal } from "react-dom";
+import { getAlphabetsColNames } from "@/util/product-letters/product-letters";
 
 interface IJspreadsheetWrapper extends HTMLDivElement {
   // single sheet
@@ -24,6 +25,12 @@ export const ExcelTable = (props: IExcelTable) => {
     tableOverflow: true,
     tableHeight: "200px",
     tableWidth: "100%",
+    contextMenu: (
+      instance: jspreadsheet.JspreadsheetInstance,
+      colIndex: string | null,
+      rowIndex: string | null,
+      event: PointerEvent
+    ) => [],
     oneditionend: (...rest) => handleEditCell(...rest),
   };
   const sheetOptions: IJspreadsheet.TabOptions[] = [
@@ -31,8 +38,17 @@ export const ExcelTable = (props: IExcelTable) => {
       ...defaultOption,
       sheetName: "sheet1",
       data: [
-        [1, 2, 3],
-        [5, 6, 7],
+        ["1", "2", "3"],
+        ["5", "6"],
+        // ["5", "6", "7"],
+      ],
+    },
+    {
+      ...defaultOption,
+      sheetName: "sheet2",
+      data: [
+        ["3", "3", "3"],
+        ["3", "3", "3"],
       ],
     },
   ];
@@ -41,13 +57,28 @@ export const ExcelTable = (props: IExcelTable) => {
     y: 0,
   };
   const [lastCellIndexes, setLastCellIndexes] = useState<ILastCellIndex[]>(
-    Array(sheetOptions.length).fill(initalLastCellIndex)
+    sheetOptions.map((sheetOption) => {
+      // default data가 있는 경우 lastCellIndexes 갱신
+      if (sheetOption.data && Array.isArray(sheetOption.data[0])) {
+        const lastCellIndex = initalLastCellIndex;
+        for (const row of sheetOption.data) {
+          if (Array.isArray(row) && row.length > lastCellIndex.x) {
+            lastCellIndex.x = row.length;
+          }
+        }
+        lastCellIndex.y = sheetOption.data.length;
+        return lastCellIndex;
+      }
+
+      return initalLastCellIndex;
+    })
   );
   const [newSheetIndex, setNewSheetIndex] = useState<number>(
     sheetOptions.length + 1
   );
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
+  const dataSep = "|";
 
   useEffect(() => {
     if (jRef.current && !jRef.current.jexcel) {
@@ -269,16 +300,43 @@ export const ExcelTable = (props: IExcelTable) => {
         tabElem.setAttribute("data-spreadsheet", `${i}`);
       }
 
-      // 마지막 남은 시트 삭제 시 신규 sheet 생성
-      if (jRef.current.jexcel.length === 0) {
-        createNewSheet();
-      }
-
       // 첫번째 시트 선택
       (tabElems[0] as HTMLElement).click();
 
       // lastCellIndex 삭제
       removeLastCellIndex(index);
+    }
+  };
+
+  const extractData = () => {
+    const result: ISheetData = {};
+    if (jRef.current) {
+      for (const [i, sheet] of jRef.current.jexcel.entries()) {
+        const sheetNaviElem = jRef.current.querySelector(
+          `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet="${i}"]`
+        ) as HTMLDivElement;
+        const sheetName = sheetNaviElem?.innerText.split("\n")[0];
+
+        const data = sheet.getData();
+        const lastCellIndex = lastCellIndexes[i];
+
+        let convertedData = data
+          .slice(0, lastCellIndex.y + 1)
+          .map((row: string[], i: number) =>
+            row.slice(0, lastCellIndex.x + 1).join(dataSep)
+          );
+        convertedData = convertedData.join("\n");
+
+        const colNames = getAlphabetsColNames(lastCellIndex.x);
+        const convertedColNames = colNames.join(dataSep);
+
+        let text = convertedColNames + "\n";
+        text += convertedData;
+
+        result[sheetName] = text;
+      }
+
+      return result;
     }
   };
 
@@ -291,18 +349,10 @@ export const ExcelTable = (props: IExcelTable) => {
       >
         show me lastCellIndexes
       </button>
-      <button
-        onClick={() => {
-          if (jRef.current) {
-            for (const sheet of jRef.current.jexcel) {
-              const a = sheet.getJson();
-              console.log("a", a);
-            }
-          }
-        }}
-      >
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      </button>
+      <button onClick={() => {
+        const extracted = extractData();
+        console.log('extracted', extracted);
+      }}>!!!!!!!!!!!!!!!!!!!!!!!!!!!!</button>
       <div className={`${styles["sheet-info-wrapper"]}`}>
         <button
           className={`${styles["new-sheet-button"]}`}
