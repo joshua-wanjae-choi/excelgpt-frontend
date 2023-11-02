@@ -3,13 +3,14 @@ import { StateCreator } from "zustand";
 export const createGptSlice: StateCreator<IGptState, [], [], IGptState> = (
   set
 ) => ({
-  isGptSubmitted: false,
+  onGptProgress: false,
   latestGptQuery: "",
   searchTextareaHeight: 0,
   latestGptQueryHeight: 0,
   defaultSearchTextareaHeight: 0,
-  setIsGptSubmitted: (isGptSubmitted: boolean) =>
-    set((state) => ({ ...state, isGptSubmitted: isGptSubmitted })),
+  gptAnswer: "",
+  setOnGptProgress: (onGptProgress: boolean) =>
+    set((state) => ({ ...state, onGptProgress: onGptProgress })),
   setLatestGptQuery: (latestGptQuery: string) =>
     set((state) => ({ ...state, latestGptQuery: latestGptQuery })),
   setSearchTextareaHeight: (searchTextareaHeight: number) =>
@@ -20,5 +21,10 @@ export const createGptSlice: StateCreator<IGptState, [], [], IGptState> = (
     set((state) => ({
       ...state,
       defaultSearchTextareaHeight: defaultSearchTextareaHeight,
+    })),
+  setGptAnswer: (gptAnswer: string) =>
+    set((state) => ({
+      ...state,
+      gptAnswer: gptAnswer,
     })),
 });

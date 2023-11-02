@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, KeyboardEvent, useRef } from "react";
+import { useEffect, KeyboardEvent, useRef, useState } from "react";
 import { useBoundStore } from "@/store";
 import styles from "./search.module.css";
 
@@ -8,20 +8,19 @@ export const Search = (props: ISearchProps) => {
   const searchWrapref = useRef<HTMLDivElement>(null);
   const searchBtnRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isGptSubmitted, setIsGptSubmitted] = useState(false);
   let pxFrom1rem = 16;
   const {
-    isGptSubmitted,
     searchTextareaHeight,
     latestGptQueryHeight,
-    setIsGptSubmitted,
+    setOnGptProgress,
     setLatestGptQuery,
     setSearchTextareaHeight,
     setDefaultSearchTextareaHeight,
   } = useBoundStore((state) => ({
-    isGptSubmitted: state.isGptSubmitted,
     searchTextareaHeight: state.searchTextareaHeight,
     latestGptQueryHeight: state.latestGptQueryHeight,
-    setIsGptSubmitted: state.setIsGptSubmitted,
+    setOnGptProgress: state.setOnGptProgress,
     setLatestGptQuery: state.setLatestGptQuery,
     setSearchTextareaHeight: state.setSearchTextareaHeight,
     setDefaultSearchTextareaHeight: state.setDefaultSearchTextareaHeight,
@@ -146,6 +145,9 @@ export const Search = (props: ISearchProps) => {
       searchWrapref &&
       searchWrapref.current
     ) {
+      // GPT 프로세스 시작
+      setOnGptProgress(true);
+
       // 검색어 전역 state 갱신
       setLatestGptQuery(textareaRef.current.value);
 

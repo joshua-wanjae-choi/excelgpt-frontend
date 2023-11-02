@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { getAlphabetsColNames } from "@/util/product-letters/product-letters";
 import { useMutation } from "@tanstack/react-query";
 import { uploadFile } from "@/query/excelgpt/upload-file";
+import { useBoundStore } from "@/store";
 
 interface IJspreadsheetWrapper extends HTMLDivElement {
   // single sheet
@@ -80,13 +81,17 @@ export const ExcelTable = (props: IExcelTable) => {
   );
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentSheetIndex, setCurrentSheetIndex] = useState(
-    sheetOptions.length > 0 ? sheetOptions.length -1 : 0
+    sheetOptions.length > 0 ? sheetOptions.length - 1 : 0
   );
   // 데이터 추출 시 사용하는 구분자
   const dataSep = "|";
-  const mutation = useMutation({
+  const fileMutation = useMutation({
     mutationFn: uploadFile,
   });
+  const { onGptProgress, setGptAnswer } = useBoundStore((state) => ({
+    onGptProgress: state.onGptProgress,
+    setGptAnswer: state.setGptAnswer,
+  }));
 
   useEffect(() => {
     if (jRef.current && !jRef.current.jexcel) {
@@ -117,6 +122,25 @@ export const ExcelTable = (props: IExcelTable) => {
       }
     }
   }, [currentSheetIndex, lastCellIndexes]);
+
+  useEffect(() => {
+    if (onGptProgress) {
+      async function run() {
+        setGptAnswer("데이터 동기화 중 ...");
+        const extracted = extractData();
+        try {
+          const todo = await fileMutation.mutateAsync(extracted);
+          console.log("todo", todo);
+          setGptAnswer("데이터 동기화 성공!");
+        } catch (error) {
+          setGptAnswer("데이터 동기화 실패! 다시 요청해주세요 ...");
+        } finally {
+          console.log("");
+        }
+      }
+      run();
+    }
+  }, [onGptProgress]);
 
   /**
    * 셀 값이 변경된 경우
@@ -361,7 +385,7 @@ export const ExcelTable = (props: IExcelTable) => {
       <button
         onClick={() => {
           const extracted = extractData();
-          mutation.mutate(extracted);
+          fileMutation.mutate(extracted);
         }}
       >
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!

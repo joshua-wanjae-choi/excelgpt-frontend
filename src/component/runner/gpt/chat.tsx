@@ -7,29 +7,57 @@ export const Chat = (props: IChatProps) => {
   const latestGptQueryRef = useRef<HTMLDivElement>(null);
   const [chats, setChats] = useState<IChat[]>([]);
   const {
-    isGptSubmitted,
+    onGptProgress,
     latestGptQuery,
     searchTextareaHeight,
     latestGptQueryHeight,
     defaultSearchTextareaHeight,
+    gptAnswer,
     setLatestGptQueryHeight,
+    setOnGptProgress,
   } = useBoundStore((state) => ({
-    isGptSubmitted: state.isGptSubmitted,
+    onGptProgress: state.onGptProgress,
     latestGptQuery: state.latestGptQuery,
     searchTextareaHeight: state.searchTextareaHeight,
     latestGptQueryHeight: state.latestGptQueryHeight,
     defaultSearchTextareaHeight: state.defaultSearchTextareaHeight,
+    gptAnswer: state.gptAnswer,
     setLatestGptQueryHeight: state.setLatestGptQueryHeight,
+    setOnGptProgress: state.setOnGptProgress,
   }));
 
   useEffect(() => {
-    const doneSubmission = !isGptSubmitted;
-    if (doneSubmission && latestGptQuery !== "") {
+    if (onGptProgress) {
+      if (latestGptQuery === "") {
+        setOnGptProgress(false);
+        return;
+      }
+
       // 신규 검색문 렌더링
-      const newChat = { chatType: "question", contents: latestGptQuery };
-      setChats([...chats, newChat]);
+      const newQuestion = { chatType: "question", contents: latestGptQuery };
+
+      // 신규 대답 렌더링
+      const newAnswer = { chatType: "answer", contents: "..." };
+      setChats([...chats, newQuestion, newAnswer]);
     }
-  }, [isGptSubmitted, latestGptQuery]);
+  }, [onGptProgress, latestGptQuery]);
+
+  useEffect(() => {
+    const lastIndex = chats.length - 1;
+    let lastChat = chats[lastIndex];
+    if (
+      onGptProgress &&
+      lastChat &&
+      lastChat.chatType === "answer" &&
+      gptAnswer !== "" &&
+      gptAnswer !== lastChat.contents
+    ) {
+      const newChats = chats.map((chat, i) =>
+        i === lastIndex ? { chatType: "answer", contents: gptAnswer } : chat
+      );
+      setChats(newChats);
+    }
+  }, [onGptProgress, gptAnswer, chats]);
 
   useEffect(() => {
     if (
@@ -87,7 +115,11 @@ export const Chat = (props: IChatProps) => {
           }
 
           return (
-            <div className={`${styles["answer-wrapper"]}`} key={i}>
+            <div
+              className={`${styles["answer-wrapper"]}`}
+              key={i}
+              ref={i === chats.length - 1 ? latestGptQueryRef : undefined}
+            >
               <div className={`${styles["answer"]} border-radius-all`}>
                 {chat.contents}
               </div>
