@@ -12,13 +12,13 @@
  *  - GPT 처리 시 상태 메세지
  */
 interface IGptState {
-  onGptProgress: boolean;
+  onGptProgress: TOnGptProgress;
   latestGptQuery: string;
   searchTextareaHeight: number;
   latestGptQueryHeight: number;
   defaultSearchTextareaHeight: number;
   gptAnswer: string;
-  setOnGptProgress: (onGptProgress: boolean) => void;
+  setOnGptProgress: (onGptProgress: TOnGptProgress) => void;
   setLatestGptQuery: (latestGptQuery: string) => void;
   setSearchTextareaHeight: (searchTextareaHeight: number) => void;
   setLatestGptQueryHeight: (latestGptQueryHeight: number) => void;

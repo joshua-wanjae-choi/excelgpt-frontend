@@ -27,9 +27,9 @@ export const Chat = (props: IChatProps) => {
   }));
 
   useEffect(() => {
-    if (onGptProgress) {
+    if (onGptProgress === "chat") {
       if (latestGptQuery === "") {
-        setOnGptProgress(false);
+        setOnGptProgress("end");
         return;
       }
 
@@ -39,14 +39,19 @@ export const Chat = (props: IChatProps) => {
       // 신규 대답 렌더링
       const newAnswer = { chatType: "answer", contents: "..." };
       setChats([...chats, newQuestion, newAnswer]);
+
+      return () => {
+        // 추가된 chats이 렌더링 된 후 onGptProgress 변경
+        setOnGptProgress("table");
+      };
     }
-  }, [onGptProgress, latestGptQuery]);
+  }, [onGptProgress, latestGptQuery, chats]);
 
   useEffect(() => {
     const lastIndex = chats.length - 1;
     let lastChat = chats[lastIndex];
     if (
-      onGptProgress &&
+      onGptProgress === "table" &&
       lastChat &&
       lastChat.chatType === "answer" &&
       gptAnswer !== "" &&
@@ -57,7 +62,7 @@ export const Chat = (props: IChatProps) => {
       );
       setChats(newChats);
     }
-  }, [onGptProgress, gptAnswer, chats]);
+  }, [onGptProgress, gptAnswer]);
 
   useEffect(() => {
     if (

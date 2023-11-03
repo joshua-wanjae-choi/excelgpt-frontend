@@ -3,13 +3,13 @@ import { StateCreator } from "zustand";
 export const createGptSlice: StateCreator<IGptState, [], [], IGptState> = (
   set
 ) => ({
-  onGptProgress: false,
+  onGptProgress: "end",
   latestGptQuery: "",
   searchTextareaHeight: 0,
   latestGptQueryHeight: 0,
   defaultSearchTextareaHeight: 0,
   gptAnswer: "",
-  setOnGptProgress: (onGptProgress: boolean) =>
+  setOnGptProgress: (onGptProgress: TOnGptProgress) =>
     set((state) => ({ ...state, onGptProgress: onGptProgress })),
   setLatestGptQuery: (latestGptQuery: string) =>
     set((state) => ({ ...state, latestGptQuery: latestGptQuery })),

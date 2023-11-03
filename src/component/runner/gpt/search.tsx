@@ -146,7 +146,7 @@ export const Search = (props: ISearchProps) => {
       searchWrapref.current
     ) {
       // GPT 프로세스 시작
-      setOnGptProgress(true);
+      setOnGptProgress("chat");
 
       // 검색어 전역 state 갱신
       setLatestGptQuery(textareaRef.current.value);

@@ -9,6 +9,7 @@ import { getAlphabetsColNames } from "@/util/product-letters/product-letters";
 import { useMutation } from "@tanstack/react-query";
 import { uploadFile } from "@/query/excelgpt/upload-file";
 import { useBoundStore } from "@/store";
+import { runQuery } from "@/query/excelgpt/run-query";
 
 interface IJspreadsheetWrapper extends HTMLDivElement {
   // single sheet
@@ -85,13 +86,22 @@ export const ExcelTable = (props: IExcelTable) => {
   );
   // 데이터 추출 시 사용하는 구분자
   const dataSep = "|";
+
+  // mutation 정의
   const fileMutation = useMutation({
     mutationFn: uploadFile,
   });
-  const { onGptProgress, setGptAnswer } = useBoundStore((state) => ({
-    onGptProgress: state.onGptProgress,
-    setGptAnswer: state.setGptAnswer,
-  }));
+  const queryMutation = useMutation({
+    mutationFn: runQuery,
+  });
+
+  const { onGptProgress, latestGptQuery, setGptAnswer, setOnGptProgress } =
+    useBoundStore((state) => ({
+      onGptProgress: state.onGptProgress,
+      latestGptQuery: state.latestGptQuery,
+      setGptAnswer: state.setGptAnswer,
+      setOnGptProgress: state.setOnGptProgress,
+    }));
 
   useEffect(() => {
     if (jRef.current && !jRef.current.jexcel) {
@@ -124,21 +134,42 @@ export const ExcelTable = (props: IExcelTable) => {
   }, [currentSheetIndex, lastCellIndexes]);
 
   useEffect(() => {
-    if (onGptProgress) {
-      async function run() {
-        setGptAnswer("데이터 동기화 중 ...");
-        const extracted = extractData();
-        try {
-          const todo = await fileMutation.mutateAsync(extracted);
-          console.log("todo", todo);
-          setGptAnswer("데이터 동기화 성공!");
-        } catch (error) {
-          setGptAnswer("데이터 동기화 실패! 다시 요청해주세요 ...");
-        } finally {
-          console.log("");
+    async function run() {
+      setGptAnswer("데이터 동기화 중 ...");
+      const extracted = extractData();
+      try {
+        const asyncFileResult = await fileMutation.mutateAsync(extracted);
+        if (asyncFileResult.status % 100 !== 2) {
+          new Error(asyncFileResult.statusText);
         }
+        console.log("asyncFileResult", asyncFileResult);
+        setGptAnswer("데이터 동기화 성공!");
+      } catch (error) {
+        setGptAnswer("데이터 동기화 실패! 다시 요청해주세요 ...");
+        return false;
       }
-      run();
+
+      setGptAnswer("쿼리 실행 중 ...");
+      try {
+        const runQueryResult = await queryMutation.mutateAsync(latestGptQuery);
+        if (runQueryResult.status % 100 !== 2) {
+          new Error(runQueryResult.statusText);
+        }
+
+        setGptAnswer("쿼리 성공!");
+      } catch (error) {
+        setGptAnswer("쿼리 실패! 다시 요청해주세요 ...");
+        return false;
+      }
+
+      return true;
+    }
+
+    if (onGptProgress === "table") {
+      run().then((isOk) => {
+        setGptAnswer("");
+        setOnGptProgress("end");
+      });
     }
   }, [onGptProgress]);
 
@@ -340,6 +371,10 @@ export const ExcelTable = (props: IExcelTable) => {
     }
   };
 
+  /**
+   * 데이터 추출
+   * @returns object 시트 별 데이터
+   */
   const extractData = () => {
     const result: ISheetData = {};
 
