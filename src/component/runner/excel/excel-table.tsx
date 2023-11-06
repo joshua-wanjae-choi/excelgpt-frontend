@@ -458,21 +458,6 @@ export const ExcelTable = (props: IExcelTable) => {
 
   return (
     <>
-      <button
-        onClick={() => {
-          console.log("lastCellIndexes", lastCellIndexes);
-        }}
-      >
-        show me lastCellIndexes
-      </button>
-      <button
-        onClick={() => {
-          const extracted = extractData();
-          fileMutation.mutate(extracted);
-        }}
-      >
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      </button>
       <div className={`${styles["sheet-info-wrapper"]}`}>
         <button
           className={`${styles["new-sheet-button"]}`}
