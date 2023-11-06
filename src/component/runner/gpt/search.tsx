@@ -9,10 +9,15 @@ export const Search = (props: ISearchProps) => {
   const searchBtnRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isGptSubmitted, setIsGptSubmitted] = useState(false);
+  const [isTextareaReadOnly, setIsTextareaReadOnly] = useState(false);
+  const [submitButtonClass, setSubmitButtonClass] = useState(
+    `border-radius-end ${styles["search-submit"]}`
+  );
   let pxFrom1rem = 16;
   const {
     searchTextareaHeight,
     latestGptQueryHeight,
+    onGptProgress,
     setOnGptProgress,
     setLatestGptQuery,
     setSearchTextareaHeight,
@@ -20,6 +25,7 @@ export const Search = (props: ISearchProps) => {
   } = useBoundStore((state) => ({
     searchTextareaHeight: state.searchTextareaHeight,
     latestGptQueryHeight: state.latestGptQueryHeight,
+    onGptProgress: state.onGptProgress,
     setOnGptProgress: state.setOnGptProgress,
     setLatestGptQuery: state.setLatestGptQuery,
     setSearchTextareaHeight: state.setSearchTextareaHeight,
@@ -51,6 +57,21 @@ export const Search = (props: ISearchProps) => {
       handleResizeSearch();
     }
   }, [props.gptWrapHeight, searchTextareaHeight]);
+
+  useEffect(() => {
+    // 쿼리 처리 중
+    if (onGptProgress === "table") {
+      setIsTextareaReadOnly(true);
+      setSubmitButtonClass(
+        `border-radius-end ${styles["search-submit"]} prevent-click`
+      );
+    }
+    // 그 외
+    else {
+      setIsTextareaReadOnly(false);
+      setSubmitButtonClass(`border-radius-end ${styles["search-submit"]} `);
+    }
+  }, [onGptProgress]);
 
   /**
    * Element 높이를 재조정합니다.
@@ -171,17 +192,26 @@ export const Search = (props: ISearchProps) => {
         className={`border-radius-start no-scrollbar ${styles["seach-textarea"]}`}
         autoComplete="off"
         autoFocus
-        onKeyDown={(e) => handleSearchTextKeyDown(e)}
-        onKeyUp={(e) => resizeSearchTextareaHeight(e.target as HTMLElement)}
+        onKeyDown={
+          onGptProgress === "table"
+            ? (e) => {}
+            : (e) => handleSearchTextKeyDown(e)
+        }
+        onKeyUp={
+          onGptProgress === "table"
+            ? (e) => {}
+            : (e) => resizeSearchTextareaHeight(e.target as HTMLElement)
+        }
+        readOnly={isTextareaReadOnly}
         ref={textareaRef}
       ></textarea>
       <button
-        className={`border-radius-end ${styles["search-submit"]}`}
+        className={submitButtonClass}
         type="button"
         ref={searchBtnRef}
         onClick={triggerSubmit}
       >
-        <span className={`${styles["vertical"]}`}>CLICK</span>
+        <span>CLICK</span>
       </button>
     </div>
   );

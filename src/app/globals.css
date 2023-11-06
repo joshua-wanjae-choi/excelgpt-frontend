@@ -35,3 +35,7 @@ html {
 .border-radius-all {
   border-radius: 1rem;
 }
+
+.prevent-click {
+  pointer-events: none;
+}
