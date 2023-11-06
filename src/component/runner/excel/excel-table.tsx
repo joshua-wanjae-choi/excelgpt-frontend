@@ -86,6 +86,8 @@ export const ExcelTable = (props: IExcelTable) => {
   );
   // 데이터 추출 시 사용하는 구분자
   const dataSep = "|";
+  // 결과 시트 명
+  const resultSheetName = "result";
 
   // mutation 정의
   const fileMutation = useMutation({
@@ -139,10 +141,10 @@ export const ExcelTable = (props: IExcelTable) => {
       const extracted = extractData();
       try {
         const asyncFileResult = await fileMutation.mutateAsync(extracted);
-        if (asyncFileResult.status % 100 !== 2) {
-          new Error(asyncFileResult.statusText);
+        if (Math.floor(asyncFileResult.status / 100) !== 2) {
+          throw new Error(asyncFileResult.statusText);
         }
-        console.log("asyncFileResult", asyncFileResult);
+
         setGptAnswer("데이터 동기화 성공!");
       } catch (error) {
         setGptAnswer("데이터 동기화 실패! 다시 요청해주세요 ...");
@@ -152,10 +154,13 @@ export const ExcelTable = (props: IExcelTable) => {
       setGptAnswer("쿼리 실행 중 ...");
       try {
         const runQueryResult = await queryMutation.mutateAsync(latestGptQuery);
-        if (runQueryResult.status % 100 !== 2) {
-          new Error(runQueryResult.statusText);
+        if (
+          Math.floor(runQueryResult.status / 100) !== 2 ||
+          !runQueryResult.data
+        ) {
+          throw new Error(runQueryResult.statusText);
         }
-
+        createResultSheet(runQueryResult.data.data);
         setGptAnswer("쿼리 성공!");
       } catch (error) {
         setGptAnswer("쿼리 실패! 다시 요청해주세요 ...");
@@ -260,12 +265,13 @@ export const ExcelTable = (props: IExcelTable) => {
 
   /**
    * 새 시트 추가
+   * @param newSheetOption 시트 옵션
+   * @returns {boolean} 성공여부
    */
-  const createNewSheet = () => {
-    const newSheetOption = {
-      ...defaultOption,
-      sheetName: `sheet${newSheetIndex}`,
-    };
+  const createNewSheet = (newSheetOption: jspreadsheet.TabOptions) => {
+    if (!newSheetOption) {
+      return false;
+    }
 
     if (jRef.current) {
       // 신규 시트 생성
@@ -276,16 +282,58 @@ export const ExcelTable = (props: IExcelTable) => {
         `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet].selected`
       );
       sheetNaviElem?.addEventListener("click", handleSheetNaviClick);
+
+      // currentSheetIndex 갱신
+      setCurrentSheetIndex(currentSheetIndex + 1);
+
+      // newSheetIndex 갱신
+      setNewSheetIndex(newSheetIndex + 1);
+
+      // lastCellIndex 추가
+      appendLastCellIndex(initalLastCellIndex);
+      return true;
     }
 
-    // currentSheetIndex 갱신
-    setCurrentSheetIndex(currentSheetIndex + 1);
+    return false;
+  };
 
-    // newSheetIndex 갱신
-    setNewSheetIndex(newSheetIndex + 1);
+  /**
+   * 새 기본 시트 추가
+   */
+  const createDefaultNewSheet = () => {
+    const newSheetOption = {
+      ...defaultOption,
+      sheetName: `sheet${newSheetIndex}`,
+    };
 
-    // lastCellIndex 추가
-    appendLastCellIndex(initalLastCellIndex);
+    createNewSheet(newSheetOption);
+  };
+
+  /**
+   * 결과 시트 생성
+   * @param data {string[][]} 결과시트 데이터
+   */
+  const createResultSheet = (data: string[][]) => {
+    if (jRef.current) {
+      for (const i in jRef.current.jexcel) {
+        const sheetNaviElem = jRef.current.querySelector(
+          `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet="${i}"]`
+        ) as HTMLDivElement;
+        const sheetName = sheetNaviElem?.innerText.split("\n")[0];
+
+        if (sheetName === resultSheetName) {
+          removeSheet(parseInt(i, 10));
+        }
+      }
+
+      const newSheetOption = {
+        ...defaultOption,
+        sheetName: resultSheetName,
+        data: data,
+      };
+
+      createNewSheet(newSheetOption);
+    }
   };
 
   /**
@@ -428,7 +476,7 @@ export const ExcelTable = (props: IExcelTable) => {
       <div className={`${styles["sheet-info-wrapper"]}`}>
         <button
           className={`${styles["new-sheet-button"]}`}
-          onClick={createNewSheet}
+          onClick={createDefaultNewSheet}
         >
           +
         </button>
