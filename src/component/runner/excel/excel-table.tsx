@@ -311,9 +311,9 @@ export const ExcelTable = (props: IExcelTable) => {
 
   /**
    * 결과 시트 생성
-   * @param data {string[][]} 결과시트 데이터
+   * @param data {string[]} 결과시트 데이터
    */
-  const createResultSheet = (data: string[][]) => {
+  const createResultSheet = (data: string[]) => {
     if (jRef.current) {
       for (const i in jRef.current.jexcel) {
         const sheetNaviElem = jRef.current.querySelector(
@@ -326,10 +326,22 @@ export const ExcelTable = (props: IExcelTable) => {
         }
       }
 
+      // data에서 첫 행 제거
+      const refinedData: string[][] = [];
+      if (data.length > 0) {
+        for (const [i, row] of data.entries()) {
+          if (i === 0) {
+            continue;
+          }
+
+          refinedData.push(row.split(dataSep));
+        }
+      }
+
       const newSheetOption = {
         ...defaultOption,
         sheetName: resultSheetName,
-        data: data,
+        data: refinedData,
       };
 
       createNewSheet(newSheetOption);
