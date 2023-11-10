@@ -24,7 +24,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
   const defaultOption: IJspreadsheet.JSpreadsheetOptions = {
     about: false,
     fullscreen: false,
-    defaultColWidth: 50,
+    defaultColWidth: 70,
     minDimensions: [20, 40],
     rowResize: true,
     tableOverflow: true,
@@ -43,17 +43,10 @@ export const ExcelTable = (props: IExcelTableProps) => {
       ...defaultOption,
       sheetName: "sheet1",
       data: [
-        ["1", "2", "3"],
-        ["5", "6"],
-        // ["5", "6", "7"],
-      ],
-    },
-    {
-      ...defaultOption,
-      sheetName: "sheet2",
-      data: [
-        ["3", "3", "3"],
-        ["3", "3", "3"],
+        ["김수미"],
+        ["김기철"],
+        ["엄행란"],
+        ["김모모"],
       ],
     },
   ];
@@ -198,7 +191,6 @@ export const ExcelTable = (props: IExcelTableProps) => {
       const sheetNaviWrapElem = jRef.current.querySelector(
         `.${styles["sheet-navi-wrapper"]}`
       ) as HTMLElement;
-
 
       if (!sheetNaviWrapElem) {
         return;
@@ -501,7 +493,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
           );
         convertedData = convertedData.join("\n");
 
-        const colNames = getAlphabetsColNames(lastCellIndex.x);
+        const colNames = getAlphabetsColNames(lastCellIndex.x + 1);
         const convertedColNames = colNames.join(dataSep);
 
         let text = convertedColNames + "\n";
