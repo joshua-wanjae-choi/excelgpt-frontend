@@ -18,7 +18,7 @@ interface IJspreadsheetWrapper extends HTMLDivElement {
   jexcel: IJspreadsheet.JSpreadsheet[];
 }
 
-export const ExcelTable = (props: IExcelTable) => {
+export const ExcelTable = (props: IExcelTableProps) => {
   const jRef = useRef<IJspreadsheetWrapper>(null);
   const defaultOption: IJspreadsheet.JSpreadsheetOptions = {
     about: false,
@@ -27,7 +27,7 @@ export const ExcelTable = (props: IExcelTable) => {
     minDimensions: [20, 40],
     rowResize: true,
     tableOverflow: true,
-    tableHeight: "200px",
+    tableHeight: "100px",
     tableWidth: "100%",
     contextMenu: (
       instance: jspreadsheet.JspreadsheetInstance,
@@ -177,6 +177,33 @@ export const ExcelTable = (props: IExcelTable) => {
       });
     }
   }, [onGptProgress]);
+
+  // 테이블 높이 조정
+  useEffect(() => {
+    if (jRef.current) {
+      const sheetNaviWrapElem = jRef.current.querySelector(
+        `.${styles["sheet-navi-wrapper"]}`
+      ) as HTMLElement;
+
+      if (!sheetNaviWrapElem) {
+        return;
+      }
+
+      let candTableHeight =
+        props.excelWrapHeight - sheetNaviWrapElem.offsetHeight;
+      for (const elem of jRef.current.jexcel) {
+        elem.options["tableHeight"] = `${candTableHeight}px`;
+      }
+
+      const containerWrapElem = jRef.current.querySelectorAll(
+        `div.${styles["excel-table-wrapper"]} .jexcel_content`
+      );
+      for (const elem of containerWrapElem) {
+        (elem as HTMLDivElement).style.minHeight = `${candTableHeight}px`;
+        (elem as HTMLDivElement).style.maxHeight = `${candTableHeight}px`;
+      }
+    }
+  }, [props.excelWrapHeight]);
 
   /**
    * 셀 값이 변경된 경우

@@ -1,4 +1,4 @@
-interface IExcelTable {
+interface IExcelTableProps {
   excelWrapHeight: number;
 }
 
