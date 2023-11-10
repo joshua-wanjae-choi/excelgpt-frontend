@@ -101,12 +101,14 @@ export const ExcelTable = (props: IExcelTableProps) => {
   const {
     onGptProgress,
     latestGptQuery,
+    currentSheetName,
     setGptAnswer,
     setOnGptProgress,
     setCurrentSheetName,
   } = useBoundStore((state) => ({
     onGptProgress: state.onGptProgress,
     latestGptQuery: state.latestGptQuery,
+    currentSheetName: state.currentSheetName,
     setGptAnswer: state.setGptAnswer,
     setOnGptProgress: state.setOnGptProgress,
     setCurrentSheetName: state.setCurrentSheetName,
@@ -162,7 +164,10 @@ export const ExcelTable = (props: IExcelTableProps) => {
 
       setGptAnswer("쿼리 실행 중 ...");
       try {
-        const runQueryResult = await queryMutation.mutateAsync(latestGptQuery);
+        const runQueryResult = await queryMutation.mutateAsync({
+          query: latestGptQuery,
+          baseSheetName: currentSheetName,
+        });
         if (
           Math.floor(runQueryResult.status / 100) !== 2 ||
           !runQueryResult.data
@@ -193,6 +198,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
       const sheetNaviWrapElem = jRef.current.querySelector(
         `.${styles["sheet-navi-wrapper"]}`
       ) as HTMLElement;
+
 
       if (!sheetNaviWrapElem) {
         return;
@@ -511,7 +517,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
   /**
    * 시트 명 추출
    * @param sheetIndex 시트 인덱스
-   * @returns 
+   * @returns
    */
   const extractSheetName = (sheetIndex: number): [boolean, string] => {
     if (jRef.current) {
