@@ -42,12 +42,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
     {
       ...defaultOption,
       sheetName: "sheet1",
-      data: [
-        ["김수미"],
-        ["김기철"],
-        ["엄행란"],
-        ["김모모"],
-      ],
+      data: [["김수미"], ["김기철"], ["엄행란"], ["김모모"]],
     },
   ];
   const initalLastCellIndex: ILastCellIndex = {
@@ -491,13 +486,12 @@ export const ExcelTable = (props: IExcelTableProps) => {
           .map((row: string[], i: number) =>
             row.slice(0, lastCellIndex.x + 1).join(dataSep)
           );
-        convertedData = convertedData.join("\n");
 
         const colNames = getAlphabetsColNames(lastCellIndex.x + 1);
         const convertedColNames = colNames.join(dataSep);
 
         let text = convertedColNames + "\n";
-        text += convertedData;
+        text += convertedData.join("\n");
 
         result[sheetName] = text;
       }
