@@ -20,6 +20,7 @@ interface IJspreadsheetWrapper extends HTMLDivElement {
 
 export const ExcelTable = (props: IExcelTableProps) => {
   const jRef = useRef<IJspreadsheetWrapper>(null);
+  const [tableHeight, setTableHeight] = useState(100);
   const defaultOption: IJspreadsheet.JSpreadsheetOptions = {
     about: false,
     fullscreen: false,
@@ -27,7 +28,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
     minDimensions: [20, 40],
     rowResize: true,
     tableOverflow: true,
-    tableHeight: "100px",
+    tableHeight: `${tableHeight}px`,
     tableWidth: "100%",
     contextMenu: (
       instance: jspreadsheet.JspreadsheetInstance,
@@ -97,13 +98,19 @@ export const ExcelTable = (props: IExcelTableProps) => {
     mutationFn: runQuery,
   });
 
-  const { onGptProgress, latestGptQuery, setGptAnswer, setOnGptProgress } =
-    useBoundStore((state) => ({
-      onGptProgress: state.onGptProgress,
-      latestGptQuery: state.latestGptQuery,
-      setGptAnswer: state.setGptAnswer,
-      setOnGptProgress: state.setOnGptProgress,
-    }));
+  const {
+    onGptProgress,
+    latestGptQuery,
+    setGptAnswer,
+    setOnGptProgress,
+    setCurrentSheetName,
+  } = useBoundStore((state) => ({
+    onGptProgress: state.onGptProgress,
+    latestGptQuery: state.latestGptQuery,
+    setGptAnswer: state.setGptAnswer,
+    setOnGptProgress: state.setOnGptProgress,
+    setCurrentSheetName: state.setCurrentSheetName,
+  }));
 
   useEffect(() => {
     if (jRef.current && !jRef.current.jexcel) {
@@ -117,10 +124,12 @@ export const ExcelTable = (props: IExcelTableProps) => {
       sheetNaviWrapElem.classList.add(styles["sheet-navi-wrapper"]);
 
       // 현재 시트 인덱스 기록
-      const sheetNaviElem = sheetNaviWrapElem.querySelector(
+      const sheetNaviElems = sheetNaviWrapElem.querySelectorAll(
         `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet]`
       );
-      sheetNaviElem?.addEventListener("click", handleSheetNaviClick);
+      for (const sheetNaviElem of sheetNaviElems) {
+        sheetNaviElem.addEventListener("click", handleSheetNaviClick);
+      }
 
       setIsLoaded(true);
     }
@@ -202,8 +211,18 @@ export const ExcelTable = (props: IExcelTableProps) => {
         (elem as HTMLDivElement).style.minHeight = `${candTableHeight}px`;
         (elem as HTMLDivElement).style.maxHeight = `${candTableHeight}px`;
       }
+
+      setTableHeight(candTableHeight);
     }
   }, [props.excelWrapHeight]);
+
+  // 현재 테이블 명
+  useEffect(() => {
+    if (jRef.current) {
+      const [, sheetName] = extractSheetName(currentSheetIndex);
+      setCurrentSheetName(sheetName);
+    }
+  }, [currentSheetIndex]);
 
   /**
    * 셀 값이 변경된 경우
@@ -343,13 +362,10 @@ export const ExcelTable = (props: IExcelTableProps) => {
   const createResultSheet = (data: string[]) => {
     if (jRef.current) {
       for (const i in jRef.current.jexcel) {
-        const sheetNaviElem = jRef.current.querySelector(
-          `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet="${i}"]`
-        ) as HTMLDivElement;
-        const sheetName = sheetNaviElem?.innerText.split("\n")[0];
-
+        const iInt = parseInt(i, 10);
+        const [, sheetName] = extractSheetName(iInt);
         if (sheetName === resultSheetName) {
-          removeSheet(parseInt(i, 10));
+          removeSheet(iInt);
         }
       }
 
@@ -467,10 +483,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
 
     if (jRef.current) {
       for (const [i, sheet] of jRef.current.jexcel.entries()) {
-        const sheetNaviElem = jRef.current.querySelector(
-          `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet="${i}"]`
-        ) as HTMLDivElement;
-        const sheetName = sheetNaviElem?.innerText.split("\n")[0];
+        const [, sheetName] = extractSheetName(i);
 
         const data = sheet.getData();
         const lastCellIndex = lastCellIndexes[i];
@@ -493,6 +506,23 @@ export const ExcelTable = (props: IExcelTableProps) => {
     }
 
     return result;
+  };
+
+  /**
+   * 시트 명 추출
+   * @param sheetIndex 시트 인덱스
+   * @returns 
+   */
+  const extractSheetName = (sheetIndex: number): [boolean, string] => {
+    if (jRef.current) {
+      const sheetNaviElem = jRef.current.querySelector(
+        `.${styles["sheet-navi-wrapper"]} .jexcel_tab_link[data-spreadsheet="${sheetIndex}"]`
+      ) as HTMLDivElement;
+      const sheetName = sheetNaviElem?.innerText.split("\n")[0];
+      return [true, sheetName];
+    }
+
+    return [false, ""];
   };
 
   return (

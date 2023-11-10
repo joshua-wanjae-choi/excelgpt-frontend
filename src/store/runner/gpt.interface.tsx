@@ -18,10 +18,12 @@ interface IGptState {
   latestGptQueryHeight: number;
   defaultSearchTextareaHeight: number;
   gptAnswer: string;
+  currentSheetName: string;
   setOnGptProgress: (onGptProgress: TOnGptProgress) => void;
   setLatestGptQuery: (latestGptQuery: string) => void;
   setSearchTextareaHeight: (searchTextareaHeight: number) => void;
   setLatestGptQueryHeight: (latestGptQueryHeight: number) => void;
   setDefaultSearchTextareaHeight: (defaultSearchTextareaHeight: number) => void;
   setGptAnswer: (gptAnswer: string) => void;
+  setCurrentSheetName: (currentSheetName: string) => void;
 }

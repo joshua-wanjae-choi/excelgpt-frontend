@@ -9,6 +9,7 @@ export const createGptSlice: StateCreator<IGptState, [], [], IGptState> = (
   latestGptQueryHeight: 0,
   defaultSearchTextareaHeight: 0,
   gptAnswer: "",
+  currentSheetName: "sheet1",
   setOnGptProgress: (onGptProgress: TOnGptProgress) =>
     set((state) => ({ ...state, onGptProgress: onGptProgress })),
   setLatestGptQuery: (latestGptQuery: string) =>
@@ -26,5 +27,10 @@ export const createGptSlice: StateCreator<IGptState, [], [], IGptState> = (
     set((state) => ({
       ...state,
       gptAnswer: gptAnswer,
+    })),
+  setCurrentSheetName: (currentSheetName: string) =>
+    set((state) => ({
+      ...state,
+      currentSheetName: currentSheetName,
     })),
 });

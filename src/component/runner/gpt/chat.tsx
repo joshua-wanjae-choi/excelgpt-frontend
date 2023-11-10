@@ -13,6 +13,7 @@ export const Chat = (props: IChatProps) => {
     latestGptQueryHeight,
     defaultSearchTextareaHeight,
     gptAnswer,
+    currentSheetName,
     setLatestGptQueryHeight,
     setOnGptProgress,
   } = useBoundStore((state) => ({
@@ -22,6 +23,7 @@ export const Chat = (props: IChatProps) => {
     latestGptQueryHeight: state.latestGptQueryHeight,
     defaultSearchTextareaHeight: state.defaultSearchTextareaHeight,
     gptAnswer: state.gptAnswer,
+    currentSheetName: state.currentSheetName,
     setLatestGptQueryHeight: state.setLatestGptQueryHeight,
     setOnGptProgress: state.setOnGptProgress,
   }));
@@ -36,16 +38,19 @@ export const Chat = (props: IChatProps) => {
       // 신규 검색문 렌더링
       const newQuestion = { chatType: "question", contents: latestGptQuery };
 
+      // 선택한 시트
+      const selectedSheet = { chatType: "answer", contents: `선택한 시트: ${currentSheetName}` };
+
       // 신규 대답 렌더링
       const newAnswer = { chatType: "answer", contents: "..." };
-      setChats([...chats, newQuestion, newAnswer]);
+      setChats([...chats, newQuestion, selectedSheet, newAnswer]);
 
       return () => {
         // 추가된 chats이 렌더링 된 후 onGptProgress 변경
         setOnGptProgress("table");
       };
     }
-  }, [onGptProgress, latestGptQuery, chats]);
+  }, [onGptProgress, latestGptQuery, chats, currentSheetName]);
 
   useEffect(() => {
     const lastIndex = chats.length - 1;
