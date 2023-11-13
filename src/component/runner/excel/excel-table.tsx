@@ -354,14 +354,6 @@ export const ExcelTable = (props: IExcelTableProps) => {
    */
   const createResultSheet = (data: string[]) => {
     if (jRef.current) {
-      for (const i in jRef.current.jexcel) {
-        const iInt = parseInt(i, 10);
-        const [, sheetName] = extractSheetName(iInt);
-        if (sheetName === resultSheetName) {
-          removeSheet(iInt);
-        }
-      }
-
       // data에서 첫 행 제거
       const refinedData: string[][] = [];
       if (data.length > 0) {
@@ -374,6 +366,17 @@ export const ExcelTable = (props: IExcelTableProps) => {
         }
       }
 
+      // 이미 result 시트가 존재하는 경우
+      // 데이터만 변경
+      for (const [i, tabElem] of jRef.current.jexcel.entries()) {
+        const [, sheetName] = extractSheetName(i);
+        if (sheetName === resultSheetName) {
+          tabElem.setData(refinedData);
+          return;
+        }
+      }
+
+      // result 시트를 새로 만드는 경우
       const newSheetOption = {
         ...defaultOption,
         sheetName: resultSheetName,
