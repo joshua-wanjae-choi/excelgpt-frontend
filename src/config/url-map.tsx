@@ -1,6 +1,5 @@
 export const urlMap = (urlName: string): string => {
-  // const excelGptApiRootUrl = "http://localhost:8000";
-  const excelGptApiRootUrl = "http://localhost/api";
+  const excelGptApiRootUrl = process.env.NEXT_PUBLIC_EXCELGPT_API_URL;
   const urls: IUrls = {
     "excelgpt.uploadFile": `${excelGptApiRootUrl}/file`,
     "excelgpt.runQuery": `${excelGptApiRootUrl}/query`,
