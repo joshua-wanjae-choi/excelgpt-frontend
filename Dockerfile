@@ -13,5 +13,8 @@ RUN ls
 RUN npm ci
 RUN npm run build
 
-# Command
-CMD ["tail", "-f", ".gitignore"]
+# # DEV Command
+# CMD ["tail", "-f", ".gitignore"]
+
+# # PRODUCT command
+CMD ["npm", "run", "start"]
