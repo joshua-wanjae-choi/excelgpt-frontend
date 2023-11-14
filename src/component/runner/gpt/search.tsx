@@ -185,6 +185,8 @@ export const Search = (props: ISearchProps) => {
       props.upperHandleSubmit();
     }
   };
+  const defaultValue =
+    "sheet1.A의 문자열을 일부 추출하여 sheet1.B에 붙여넣기 하고자 한다. 만약 sheet1.A의 문자열이 김으로 시작한다면, 김을 제외한 나머지 값만 sheet1.B에 붙여넣어라.";
 
   return (
     <div className={`${styles["search-wrapper"]}`} ref={searchWrapref}>
@@ -204,6 +206,7 @@ export const Search = (props: ISearchProps) => {
         }
         readOnly={isTextareaReadOnly}
         ref={textareaRef}
+        value={defaultValue}
       ></textarea>
       <button
         className={submitButtonClass}
