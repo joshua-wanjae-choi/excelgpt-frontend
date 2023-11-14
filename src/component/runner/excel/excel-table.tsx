@@ -448,6 +448,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
         alert(`failed to delete ${index} sheet`);
         return;
       }
+      const isLast = jRef.current.jexcel.length === 1;
 
       // 삭제
       jRef.current.jexcel.splice(index, 1);
@@ -462,11 +463,16 @@ export const ExcelTable = (props: IExcelTableProps) => {
         tabElem.setAttribute("data-spreadsheet", `${i}`);
       }
 
+      // 마지막 시트인 경우
+      if (isLast) {
+        createDefaultNewSheet();
+      } else {
+        // lastCellIndex 삭제
+        removeLastCellIndex(index);
+      }
+
       // 첫번째 시트 선택
       (tabElems[0] as HTMLElement).click();
-
-      // lastCellIndex 삭제
-      removeLastCellIndex(index);
     }
   };
 
@@ -530,7 +536,7 @@ export const ExcelTable = (props: IExcelTableProps) => {
           +
         </button>
       </div>
-      <div className={`${styles["excel-table-wrapper"]}`} ref={jRef} />; ;
+      <div className={`${styles["excel-table-wrapper"]}`} ref={jRef} />
       {isLoaded && appendRemoveSheetButtons()}
     </>
   );
