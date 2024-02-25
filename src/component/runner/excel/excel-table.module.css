@@ -1,0 +1,46 @@
+.excel-table-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: var(--contents-height);
+  position: relative;
+}
+.sheet-navi-wrapper {
+  display: flex;
+  flex-direction: row;
+  background-color: antiquewhite;
+  position: relative;
+  left: 4rem;
+  width: calc(100% - 4rem);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+/* sheet elem */
+.sheet-navi-wrapper [data-spreadsheet] {
+  display: flex;
+}
+
+.sheet-info-wrapper {
+  display: flex;
+  background-color: pink;
+  position: absolute;
+  width: 4rem;
+  z-index: 1;
+}
+
+.new-sheet-button {
+  display: inline-block;
+  padding: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  background-color: yellow;
+  cursor: pointer;
+}
+
+.sheet-remove-button {
+  display: flex;
+  padding: 0 2px;
+  margin-left: 2px;
+}

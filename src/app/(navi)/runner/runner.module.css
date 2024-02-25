@@ -1,0 +1,15 @@
+.excel-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 50vw;
+  background-color: aqua;
+}
+
+.gpt-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 50vw;
+  background-color: yellowgreen;
+}

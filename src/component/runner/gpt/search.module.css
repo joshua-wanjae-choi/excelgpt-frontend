@@ -1,0 +1,38 @@
+.search-wrapper {
+  display: flex;
+  flex-direction: row;
+  border-top: black solid 1px;
+  justify-content: center;
+  align-items: center;
+  height: calc(var(--search-textarea-height) + 2 * var(--search-textarea-margin-y));
+  position: relative;
+}
+
+.seach-textarea {
+  display: flex;
+  resize: none;
+  width: calc(100% - 1.2rem - 4rem);
+  height: var(--search-textarea-height);
+  padding: 0.6rem;
+  overflow: auto;
+  margin-left: 0.6rem;
+  font-size: 1rem;
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+}
+
+.search-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: var(--search-textarea-height);
+  margin-right: 0.6rem;
+  background-color: var(--teal);
+  color: white;
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+}
+
